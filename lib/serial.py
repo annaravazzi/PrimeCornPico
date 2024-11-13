@@ -10,3 +10,11 @@ class Serial:
     
     def read(self):
         return self.serial.read().decode()
+    
+if __name__ == "__main__":
+    from time import sleep
+    serial = Serial(0, 16, 17)
+    serial.write("Hello from Pico\n")
+    while True:
+        serial.read()
+        sleep(1)

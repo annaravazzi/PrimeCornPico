@@ -15,3 +15,12 @@ class Servo:
 
     def deinit (self):
         self.pwm.deinit()
+
+if __name__ == "__main__":
+    from time import sleep
+    servo = Servo(6)
+    while True:
+        servo.write_angle(45)
+        sleep(2)
+        servo.write_angle(135)
+        sleep(2)

@@ -20,3 +20,16 @@ class RGB:
         self.red.deinit()
         self.green.deinit()
         self.blue.deinit()
+
+if __name__ == "__main__":
+    from time import sleep
+    rgb = RGB(1, 2, 4)
+    rgb.color_hex(255, 0, 0)
+    sleep(2)
+    rgb.color_hex(0, 255, 0)
+    sleep(2)
+    rgb.color_hex(0, 0, 255)
+    sleep(2)
+    rgb.color_hex(255, 0, 255)
+    sleep(2)
+    rgb.deinit()

@@ -10,3 +10,12 @@ class LDR:
             return self.analog_pin.read_u16()
         else:
             return self.digital_pin.value()
+
+if __name__ == "__main__":
+    from time import sleep
+    ldr = LDR(28)
+    laser = Pin(22, Pin.OUT)
+    laser.on()
+    while True:
+        print(ldr.read())
+        sleep(1)
