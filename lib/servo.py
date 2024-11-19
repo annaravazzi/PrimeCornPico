@@ -18,7 +18,7 @@ class Servo:
 
 if __name__ == "__main__":
     from time import sleep
-    servo = Servo(6)
+    servo = Servo(22)
     while True:
         servo.write_angle(45)
         sleep(2)
