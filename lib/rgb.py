@@ -32,4 +32,6 @@ if __name__ == "__main__":
     sleep(2)
     rgb.color_hex(255, 0, 255)
     sleep(2)
+    rgb.color_hex(0, 0, 0)
+    sleep(2)
     rgb.deinit()

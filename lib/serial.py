@@ -8,7 +8,9 @@ class Serial:
     def write(self, data):
         self.serial.write(bytes(data))
     
-    def read(self):
+    def read(self, strip=True):
+        if strip:
+            return self.serial.read().decode().strip()
         return self.serial.read().decode()
     
 if __name__ == "__main__":

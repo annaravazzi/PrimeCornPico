@@ -1,5 +1,3 @@
-# TODO: Debounce button
-
 from lib.dcmotor import DCMotor
 from lib.ldr import LDR
 from lib.rgb import RGB
@@ -8,7 +6,7 @@ from lib.servo import Servo
 from time import sleep, ticks_ms
 from machine import Pin
 
-# PINS
+# Pins
 LED = 0
 RGB_R = 1
 RGB_G = 2
@@ -20,15 +18,29 @@ ENB = 15
 TX = 16
 RX = 17
 LDR_PIN = 28
+
+# Constants
 MOTOR1_SPEED = 100
 MOTOR2_SPEED = 100
-LASER_THRESHOLD = 10000
+LASER_THRESHOLD = 15000
 TURN_OFF_TIME = 15000
+BUTTON_DEBOUNCE_TIME = 500
+LDR_DEBOUNCE_TIME = 500
 
+# Codificated messages between Pico and RPi
+SET_IDLE = "set_idle"
+SET_SYNC = "set_sync"
+SET_READY = "set_ready"
+SET_PROCESSING = "set_processing"
+SET_SAVING = "set_saving"
+REGULAR = "regular"
+IRREGULAR = "irregular"
+UNKNOWN = "unknown"
+DETECTED = "detected"
+
+# Peripherals
 led = Pin(LED, Pin.OUT)
-led.off()
 rgb = RGB(RGB_R, RGB_G, RGB_B)
-rgb.color_hex(0, 0, 0)
 servo = Servo(SERVO)
 switch = Pin(SW, Pin.IN)
 motor1 = DCMotor(ENA)
@@ -36,94 +48,127 @@ motor2 = DCMotor(ENB)
 serial = Serial(0, TX, RX)
 ldr = LDR(LDR_PIN)
 
+# RGB LED colors
 colors = {"red": (255, 0, 0), "green": (0, 255, 0), "blue": (0, 0, 255), "purple": (255, 0, 255), "off": (0, 0, 0)}
 state_colors = {"boot": "off", "idle": "red", "ready": "purple", "processing": "green", "saving": "blue"}
+
+# Timing variables
 timer = 0
 start_time = 0
+button_debounce = 0
+ldr_debounce = 0
 
+# Initialize peripherals
+def init():
+    led.off()
+    rgb.color_hex(0, 0, 0)
+    servo.write_angle(45)
+    motor1.stop()
+    motor2.stop()
+
+# Change RGB LED color to one of the predefined colors
 def rgb_color(color):
     rgb.color_hex(colors[color][0], colors[color][1], colors[color][2])
 
-def button():
-    return switch.value() == 0
+# Check if button is pressed (with debouncing)
+def button(debounce):
+    return (switch.value() == 0) and (ticks_ms() - debounce > BUTTON_DEBOUNCE_TIME)
 
+# Turn on/off both motors
 def turn_on_motors(speed1, speed2):
     motor1.forward(speed1)
     motor2.forward(speed2)
-
 def turn_off_motors():
     motor1.stop()
     motor2.stop()
 
-def detect_seed():
-    return ldr.read() > LASER_THRESHOLD
+# Check if seed is detected by LDR (with debouncing)
+def detect_seed(debounce):
+    return (ldr.read() > LASER_THRESHOLD) and (ticks_ms() - debounce > LDR_DEBOUNCE_TIME)
 
 def main():
+    init()
     state = "boot"
 
     while True:
+        # Initial state, waiting for RPi to boot and finish initialization
         if state == "boot":
             read = serial.read()
-            if read == "on":
+            if read == SET_IDLE:
                 state = "idle"
                 rgb_color(state_colors[state])
 
+        # Idle state
         elif state == "idle":
             read = serial.read()
-            if read == "set_sync":
+            # RPi connected to phone via Bluetooth
+            if read == SET_SYNC:
                 state = "sync"
                 led.on()
             else:
-                if button():
+                # Switch to ready state (turn on DC motors)
+                if button(button_debounce):
+                    button_debounce = ticks_ms()
+                    serial.write(SET_READY)
                     state = "ready"
                     rgb_color(state_colors[state])
                     turn_on_motors(MOTOR1_SPEED, MOTOR2_SPEED)
 
+        # Waiting for RPi to finish sending data via Bluetooth
         elif state == "sync":
             read = serial.read()
-            if read == "set_idle":
+            if read == SET_IDLE:
                 state = "idle"
                 led.off()
 
+        # Waiting for the first seed to be detected (user inserting the seeds)
         elif state == "ready":
-            if detect_seed():
-                serial.write("set_processing")
+            if detect_seed(ldr_debounce):
+                ldr_debounce = ticks_ms()
+                serial.write(SET_PROCESSING)
                 state = "processing"
                 rgb_color(state_colors[state])
                 start_time = ticks_ms()
                 timer = 0
             else:
-                if button():
+                # Return to idle
+                if button(button_debounce):
+                    button_debounce = ticks_ms()
+                    serial.write(SET_IDLE)
                     state = "idle"
                     turn_off_motors()
                     rgb_color(state_colors[state])
 
         elif state == "processing":
             read = serial.read()
-            if read == "regular":
-                servo.write_angle(135)
-            elif read == "irregular":
-                servo.write_angle(45)
+
+            # Redirect seed
+            if read == REGULAR:
+                servo.write_angle(90)
+            elif read == IRREGULAR or read == UNKNOWN:
+                servo.write_angle(0)
             
-            if detect_seed():
+            # Laser detected seed
+            if detect_seed(ldr_debounce):
+                ldr_debounce = ticks_ms()
                 timer = 0
-                serial.write("detected")
+                start_time = ticks_ms()     # Reset timer
+                serial.write(DETECTED)
             else:
                 timer = ticks_ms() - start_time
+                # 15s of inactivity, turn off motors
                 if timer > TURN_OFF_TIME:
-                    serial.write("set_saving")
+                    serial.write(SET_SAVING)
                     state = "saving"
                     turn_off_motors()
                     rgb_color(state_colors[state])
-                else:
-                    start_time = ticks_ms()
         
+        # RPi is saving the data
         elif state == "saving":
             read = serial.read()
-            if read == "set_idle":
+            if read == SET_IDLE:
                 state = "idle"
                 rgb_color(state_colors[state])
-
 
 if __name__ == "__main__":
     main()
