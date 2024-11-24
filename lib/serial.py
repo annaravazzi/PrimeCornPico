@@ -1,7 +1,7 @@
 from machine import Pin, UART
 
 class Serial:
-    def __init__(self, channel, tx, rx, baudrate=9600, timeout=100):
+    def __init__(self, channel, tx, rx, baudrate=9600, timeout=10):
         self.serial = UART(channel, baudrate=baudrate, tx=Pin(tx), rx=Pin(rx), timeout=timeout)
         # self.serial.init(baudrate=baudrate, timeout=timeout)
     
@@ -21,5 +21,5 @@ if __name__ == "__main__":
     while True:
         read = serial.read()
         if read:
-            print(read.decode('utf-8')) # type: ignore
-        sleep(1)
+            print(read)
+            # print(read.decode('utf-8')) # type: ignore

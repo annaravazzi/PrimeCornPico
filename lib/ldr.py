@@ -14,7 +14,7 @@ class LDR:
 if __name__ == "__main__":
     from time import sleep
     ldr = LDR(28)
-    led = Pin(15, Pin.OUT)
+    led = Pin(0, Pin.OUT)
     led.value(0)
     while True:
         # print(ldr.read())
