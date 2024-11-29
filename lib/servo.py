@@ -25,5 +25,5 @@ if __name__ == "__main__":
     while True:
         servo.write_angle(0)
         sleep(2)
-        servo.write_angle(90)
+        servo.write_angle(110)
         sleep(2)

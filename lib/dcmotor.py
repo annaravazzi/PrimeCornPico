@@ -52,10 +52,26 @@ class DCMotor:
 
 if __name__ == "__main__":
     from time import sleep
-    motor1 = DCMotor(13)
-    motor2 = DCMotor(15)
+    motor1 = DCMotor(13, min_duty=0, max_duty=65535)
+    motor2 = DCMotor(15, freq=8, min_duty=0, max_duty=65535)
     motor1.forward(100)
     motor2.forward(100)
-    sleep(3)
-    motor1.stop()
-    motor2.stop()
+    sleep(0.1)
+    motor2.forward(80)
+    sleep(0.1)
+    # motor2.forward(60)
+    # motor1.forward(100)
+    # while True:
+    #     # motor2.forward(100)
+    #     # sleep(0.01)
+    #     # motor2.forward(50)
+    #     # sleep(1)
+    #     speed = input()
+    #     if speed == 0:
+    #         motor1.stop()
+    #     else:
+    #         motor1.forward(100)
+    #         sleep(0.1)
+    #         motor1.forward(int(speed))
+    # motor1.stop()
+    # motor2.stop()

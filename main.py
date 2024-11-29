@@ -13,20 +13,21 @@ RGB_G = 2
 RGB_B = 4
 SERVO = 22
 SW = 9
-ENA = 13
-ENB = 15
+EN_DISK = 13
+EN_CV = 15
 TX = 16
 RX = 17
 LDR_PIN = 28
 
 # Constants
-MOTOR1_SPEED = 100
-MOTOR2_SPEED = 100
+DISK_MOTOR_SPEED = 100
+CV_MOTOR_SPEED = 45
 LASER_THRESHOLD = 15000
 TURN_OFF_TIME = 15000
 BUTTON_DEBOUNCE_TIME = 500
 LDR_DEBOUNCE_TIME = 500
 WAIT_SEED = 0.5
+# DEFAULT_TIME = 1000
 
 # Codificated messages between Pico and RPi
 SET_IDLE = "set_idle"
@@ -52,8 +53,8 @@ led = Pin(LED, Pin.OUT)
 rgb = RGB(RGB_R, RGB_G, RGB_B)
 servo = Servo(SERVO)
 switch = Pin(SW, Pin.IN)
-motor1 = DCMotor(ENA)
-motor2 = DCMotor(ENB)
+disk_motor = DCMotor(EN_DISK)
+cv_motor = DCMotor(EN_CV, freq=8, min_duty=0, max_duty=65535)
 serial = Serial(0, TX, RX)
 ldr = LDR(LDR_PIN)
 
@@ -96,7 +97,7 @@ def detect_seed(ldr, debounce):
     return (ldr.read() > LASER_THRESHOLD) and (ticks_ms() - debounce > LDR_DEBOUNCE_TIME)
 
 def main():
-    init(led, rgb, servo, motor1, motor2)   # Initialize peripherals
+    init(led, rgb, servo, disk_motor, cv_motor)   # Initialize peripherals
     state = BOOT                   # Initial state
 
     # Timing variables
@@ -123,7 +124,7 @@ def main():
                 led.on()                # Turn on connection LED
             elif button(switch, button_debounce):
                 button_debounce = ticks_ms()    # Reset button debounce timer
-                turn_on_motors(motor1, motor2, MOTOR1_SPEED, MOTOR2_SPEED)  # Turn on DC motors
+                turn_on_motors(disk_motor, cv_motor, DISK_MOTOR_SPEED, CV_MOTOR_SPEED)  # Turn on DC motors
                 serial.write(SET_READY)         # Send message to RPi
                 print("idle -> ready")          # Print state transition
                 state = READY                   # Change state
@@ -148,6 +149,7 @@ def main():
                 ldr_debounce = ticks_ms()   # Reset LDR debounce timer
                 sleep(WAIT_SEED)                  # Wait for seed to be placed correctly
                 servo.write_angle(angle["neutral"])  # Set servo to neutral position
+                # servo.write_angle(angle["reject"])  # Default
                 serial.write(SET_PROCESSING)    # Send message to RPi
                 print("ready -> processing")    # Print state transition
                 state = PROCESSING              # Change state
@@ -157,7 +159,7 @@ def main():
                 timer = 0
             elif button(switch, button_debounce) or (timer > TURN_OFF_TIME):
                 button_debounce = ticks_ms() # Reset button debounce timer
-                turn_off_motors(motor1, motor2)           # Turn off DC motors
+                turn_off_motors(disk_motor, cv_motor)           # Turn off DC motors
                 serial.write(SET_IDLE)      # Send message to RPi
                 print("ready -> idle")      # Print state transition
                 state = IDLE                # Change state
@@ -171,6 +173,10 @@ def main():
                 servo.write_angle(angle["accept"])  # Accept seed
             elif read == IRREGULAR_SEED or read == UNKNOWN_SEED:
                 servo.write_angle(angle["reject"])  # Reject seed
+                
+            # if timer > DEFAULT_TIME:
+            #     servo.write_angle(angle["reject"])
+
             # Laser detected seed
             if detect_seed(ldr, ldr_debounce):
                 ldr_debounce = ticks_ms()   # Reset LDR debounce timer
@@ -181,7 +187,7 @@ def main():
                 serial.write(SEED_DETECTED)   # Send message to RPi
                 print("Seed detected")
             elif timer > TURN_OFF_TIME:
-                turn_off_motors(motor1, motor2)               # Turn off DC motors
+                turn_off_motors(disk_motor, cv_motor)               # Turn off DC motors
                 serial.write(SET_SAVING)    # Send message to RPi
                 print("processing -> saving")   # Print state transition
                 state = SAVING                  # Change state
