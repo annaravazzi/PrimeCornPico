@@ -54,7 +54,7 @@ if __name__ == "__main__":
     from time import sleep
     motor1 = DCMotor(13, min_duty=0, max_duty=65535)
     motor2 = DCMotor(15, freq=8, min_duty=0, max_duty=65535)
-    motor1.forward(100)
+    motor1.forward(68)
     motor2.forward(100)
     sleep(0.1)
     motor2.forward(80)

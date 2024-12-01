@@ -19,6 +19,7 @@ if __name__ == "__main__":
     while True:
         # print(ldr.read())
         if ldr.read() > 15000:
+            print("Light")
             led.value(1)
         else:
             led.value(0)
