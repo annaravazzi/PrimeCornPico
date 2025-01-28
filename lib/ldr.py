@@ -17,9 +17,7 @@ if __name__ == "__main__":
     led = Pin(0, Pin.OUT)
     led.value(0)
     while True:
-        # print(ldr.read())
-        if ldr.read() > 15000:
-            print("Light")
+        if ldr.read() > 10000:
             led.value(1)
         else:
             led.value(0)

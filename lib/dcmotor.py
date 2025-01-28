@@ -57,7 +57,7 @@ if __name__ == "__main__":
     motor1.forward(68)
     motor2.forward(100)
     sleep(0.1)
-    motor2.forward(80)
+    motor2.forward(100)
     sleep(0.1)
     # motor2.forward(60)
     # motor1.forward(100)

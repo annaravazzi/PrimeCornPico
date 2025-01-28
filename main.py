@@ -20,13 +20,13 @@ RX = 17
 LDR_PIN = 28
 
 # Constants
-DISK_MOTOR_SPEED = 100
-CV_MOTOR_SPEED = 45
+DISK_MOTOR_SPEED = 90
+CV_MOTOR_SPEED = 85
 LASER_THRESHOLD = 15000
 TURN_OFF_TIME = 15000
 BUTTON_DEBOUNCE_TIME = 500
 LDR_DEBOUNCE_TIME = 500
-WAIT_SEED = 0.5
+WAIT_SEED = 0.18
 # DEFAULT_TIME = 1000
 
 # Codificated messages between Pico and RPi
@@ -69,6 +69,7 @@ state_colors = {BOOT: "off", IDLE: "red", READY: "purple", PROCESSING: "green", 
 def init(led, rgb, servo, motor1, motor2):
     led.off()
     rgb.color_hex(0, 0, 0)
+    rgb.color_hex(255,255,255)
     servo.write_angle(angle["neutral"])
     motor1.stop()
     motor2.stop()
@@ -97,6 +98,7 @@ def detect_seed(ldr, debounce):
     return (ldr.read() > LASER_THRESHOLD) and (ticks_ms() - debounce > LDR_DEBOUNCE_TIME)
 
 def main():
+    sleep(5)
     init(led, rgb, servo, disk_motor, cv_motor)   # Initialize peripherals
     state = BOOT                   # Initial state
 
