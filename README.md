@@ -35,3 +35,4 @@ Click [here](https://superficial-baseball-f05.notion.site/PrimeCorn-1230b9cf6c57
 - MicroPico VSCode extension
 
 ## Circuit
+![alt text](circuit.png)
