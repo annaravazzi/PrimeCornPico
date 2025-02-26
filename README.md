@@ -1,6 +1,6 @@
 # PrimeCorn Raspberry Pi Pico code
 
-This is the microcontroller code for the *PrimeCorn* project. Check the [app](https://github.com/GustavoAdamee/BikeBrainApp) and the [RaspberryPi](https://github.com/GustavoAdamee/seed-classify) code for more.
+This is the microcontroller code for the *PrimeCorn* project. Check the [app](https://github.com/GustavoAdamee/BikeBrainApp) and the [RaspberryPi](https://github.com/gabrielcassolbach/seed-classify) code for more.
 
 ## About the project
 
